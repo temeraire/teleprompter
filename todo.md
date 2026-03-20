@@ -23,7 +23,7 @@ Convert the PyQt6 desktop teleprompter to a Streamlit web app hosted at `tools.g
 - [x] **4. Update portal page**
   - Add a fourth card to the tools portal HTML for Teleprompter
 
-- [ ] **5. Deploy to droplet**
+- [x] **5. Deploy to droplet**
   - Push code, set up on droplet, test behind auth
 
 ## Review
