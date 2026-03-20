@@ -3,9 +3,35 @@ Streamlit Teleprompter — white-on-black scrolling text in the browser.
 Upload a .txt file or paste a script, then control speed and font size from the sidebar.
 """
 
+import json
+import os
 import streamlit as st
 
 st.set_page_config(page_title="Teleprompter", layout="wide")
+
+# ── Settings persistence ──────────────────────────────────────────────────────
+
+SETTINGS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings.json")
+DEFAULTS = {"speed": 1.5, "font_size": 24, "strip_height": 150}
+
+
+def load_settings():
+    try:
+        with open(SETTINGS_PATH, "r") as f:
+            saved = json.load(f)
+        merged = dict(DEFAULTS)
+        merged.update(saved)
+        return merged
+    except (FileNotFoundError, json.JSONDecodeError):
+        return dict(DEFAULTS)
+
+
+def save_settings(speed, font_size, strip_height):
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump({"speed": speed, "font_size": font_size, "strip_height": strip_height}, f)
+
+
+settings = load_settings()
 
 # ── Sidebar controls ──────────────────────────────────────────────────────────
 
@@ -22,9 +48,13 @@ elif pasted_text.strip():
     script_text = pasted_text.strip()
 
 st.sidebar.markdown("---")
-speed = st.sidebar.slider("Scroll speed", min_value=0.5, max_value=5.0, value=1.5, step=0.25)
-font_size = st.sidebar.slider("Font size (px)", min_value=16, max_value=60, value=24, step=2)
-strip_height = st.sidebar.slider("Strip height (px)", min_value=100, max_value=300, value=150, step=10)
+speed = st.sidebar.slider("Scroll speed", min_value=0.5, max_value=5.0, value=settings["speed"], step=0.25)
+font_size = st.sidebar.slider("Font size (px)", min_value=16, max_value=60, value=settings["font_size"], step=2)
+strip_height = st.sidebar.slider("Strip height (px)", min_value=100, max_value=300, value=settings["strip_height"], step=10)
+
+# Save whenever settings change
+if speed != settings["speed"] or font_size != settings["font_size"] or strip_height != settings["strip_height"]:
+    save_settings(speed, font_size, strip_height)
 
 # ── Main area ─────────────────────────────────────────────────────────────────
 
@@ -44,7 +74,6 @@ if not script_text:
         unsafe_allow_html=True,
     )
 else:
-    import json
     escaped_text = json.dumps(script_text)
 
     # The launch button sits inside an HTML component so it can call the
