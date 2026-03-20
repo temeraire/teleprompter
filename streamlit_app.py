@@ -1,37 +1,15 @@
 """
 Streamlit Teleprompter — white-on-black scrolling text in the browser.
 Upload a .txt file or paste a script, then control speed and font size from the sidebar.
+Settings persist per-browser via localStorage.
 """
 
 import json
-import os
 import streamlit as st
 
 st.set_page_config(page_title="Teleprompter", layout="wide")
 
-# ── Settings persistence ──────────────────────────────────────────────────────
-
-SETTINGS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings.json")
 DEFAULTS = {"speed": 1.5, "font_size": 24, "strip_height": 150}
-
-
-def load_settings():
-    try:
-        with open(SETTINGS_PATH, "r") as f:
-            saved = json.load(f)
-        merged = dict(DEFAULTS)
-        merged.update(saved)
-        return merged
-    except (FileNotFoundError, json.JSONDecodeError):
-        return dict(DEFAULTS)
-
-
-def save_settings(speed, font_size, strip_height):
-    with open(SETTINGS_PATH, "w") as f:
-        json.dump({"speed": speed, "font_size": font_size, "strip_height": strip_height}, f)
-
-
-settings = load_settings()
 
 # ── Sidebar controls ──────────────────────────────────────────────────────────
 
@@ -48,13 +26,9 @@ elif pasted_text.strip():
     script_text = pasted_text.strip()
 
 st.sidebar.markdown("---")
-speed = st.sidebar.slider("Scroll speed", min_value=0.5, max_value=5.0, value=settings["speed"], step=0.25)
-font_size = st.sidebar.slider("Font size (px)", min_value=16, max_value=60, value=settings["font_size"], step=2)
-strip_height = st.sidebar.slider("Strip height (px)", min_value=100, max_value=300, value=settings["strip_height"], step=10)
-
-# Save whenever settings change
-if speed != settings["speed"] or font_size != settings["font_size"] or strip_height != settings["strip_height"]:
-    save_settings(speed, font_size, strip_height)
+speed = st.sidebar.slider("Scroll speed", min_value=0.5, max_value=5.0, value=DEFAULTS["speed"], step=0.25)
+font_size = st.sidebar.slider("Font size (px)", min_value=16, max_value=60, value=DEFAULTS["font_size"], step=2)
+strip_height = st.sidebar.slider("Strip height (px)", min_value=100, max_value=300, value=DEFAULTS["strip_height"], step=10)
 
 # ── Main area ─────────────────────────────────────────────────────────────────
 
@@ -199,7 +173,24 @@ else:
         const textEl = document.getElementById('text');
         const statusEl = document.getElementById('status');
         const overlay = document.getElementById('start-overlay');
-        const stripHeight = {strip_height};
+
+        // Load saved settings from parent window's localStorage, fall back to slider values
+        let savedSettings = {{}};
+        try {{
+            const raw = window.parent.localStorage.getItem('teleprompter_settings');
+            if (raw) savedSettings = JSON.parse(raw);
+        }} catch(e) {{}}
+
+        const speed = savedSettings.speed || {speed};
+        const fontSize = savedSettings.font_size || {font_size};
+        const stripHeight = savedSettings.strip_height || {strip_height};
+
+        // Apply saved settings to the elements
+        document.getElementById('strip').style.height = stripHeight + 'px';
+        textEl.style.fontSize = fontSize + 'px';
+        textEl.style.top = stripHeight + 'px';
+        overlay.style.height = stripHeight + 'px';
+        document.getElementById('strip-border').style.top = stripHeight + 'px';
 
         const scriptText = {escaped_text};
         textEl.textContent = scriptText;
@@ -207,7 +198,6 @@ else:
         let scrollPos = 0;
         let scrolling = false;
         let started = false;
-        const speed = {speed};
         let lastTime = null;
 
         function tick(timestamp) {{
@@ -230,8 +220,16 @@ else:
         }}
 
         launchBtn.addEventListener('click', function() {{
+            // Save current settings to parent localStorage for this browser
+            try {{
+                window.parent.localStorage.setItem('teleprompter_settings', JSON.stringify({{
+                    speed: {speed},
+                    font_size: {font_size},
+                    strip_height: {strip_height}
+                }}));
+            }} catch(e) {{}}
+
             teleprompter.style.display = 'block';
-            // Request fullscreen on the teleprompter div
             const el = document.documentElement;
             if (el.requestFullscreen) el.requestFullscreen();
             else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
