@@ -284,4 +284,4 @@ else:
     </html>
     """
 
-    st.components.v1.html(teleprompter_html, height=120, scrolling=False)
+    st.components.v1.html(teleprompter_html, height=160, scrolling=False)
