@@ -1,0 +1,33 @@
+[Unit]
+Description=Teleprompter Streamlit App
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/teleprompter
+ExecStart=/opt/teleprompter/.venv/bin/streamlit run streamlit_app.py \
+    --server.port 3003 \
+    --server.headless true \
+    --server.baseUrlPath /teleprompter \
+    --server.enableCORS false \
+    --server.enableXsrfProtection false
+
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=teleprompter
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/teleprompter
+PrivateTmp=true
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

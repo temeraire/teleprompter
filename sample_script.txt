@@ -1,0 +1,11 @@
+Welcome to the Teleprompter demo.
+
+This is a sample script to test the scrolling behavior. The text should appear in white on a black background, scrolling smoothly upward at the top of your screen.
+
+You can click anywhere on the window to pause, and click again to resume. Use the slider on the right side to move the text up or down if you want to.
+
+The window is positioned right below your camera, so your eyes stay near the lens while reading. This keeps your gaze natural and prevents the side-to-side eye movement that gives away teleprompter use.
+
+When this text reaches the end, scrolling will stop automatically.
+
+Good luck with your presentation!
