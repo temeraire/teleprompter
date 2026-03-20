@@ -25,9 +25,8 @@ SyslogIdentifier=teleprompter
 
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=/opt/teleprompter
+ReadWritePaths=/opt/teleprompter /var/www/.streamlit
 PrivateTmp=true
-ProtectHome=true
 
 [Install]
 WantedBy=multi-user.target
